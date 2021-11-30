@@ -4,13 +4,30 @@ output:
   html_document:
     keep_md: true
 ---
-
+## Load required libraries
+```{r loadlibraries}
+library(ggplot2)
+```
 
 ## Loading and preprocessing the data
 
+```{r readfile}
+movements<-read.csv("activity.csv",header = TRUE,sep = ",")
+movements$Dates<-as.Date(movements$date,format="%Y-%m-%d")
+```
 
 
 ## What is mean total number of steps taken per day?
+Please NOTE, that we are ignoring NA for this report
+
+```{r stepsmean, results=TRUE}
+
+stepPerDay<-as.data.frame(aggregate(movements$steps, by=list(movements$Dates), FUN=mean))
+colnames(stepPerDay) <- c('Date', 'MeanSteps')
+
+plot(stepPerDay$MeanSteps ~ stepPerDay$Date,xlab="", ylab="Steps", pch=19, type = "l", col = "red",main = "Mean steps per day")
+
+```
 
 
 
