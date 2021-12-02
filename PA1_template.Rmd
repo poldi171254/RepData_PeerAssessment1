@@ -8,13 +8,15 @@ output:
 ```{r loadlibraries}
 library(ggplot2)
 library(dplyr)
+library(Hmisc)
 ```
 
 ## Loading and preprocessing the data
 
 ```{r readfile}
 movements<-read.csv("activity.csv",header = TRUE,sep = ",")
-movements$Dates<-as.Date(movements$date,format="%Y-%m-%d")
+# Convert char to Date
+movements$date<-as.Date(movements$date,format="%Y-%m-%d")
 ```
 
 
@@ -29,7 +31,7 @@ For this part of the assignment, you can ignore the missing values in the datase
     3. Calculate and report the mean and median of the total number of steps taken per day
 
 ```{r totalsteps, results=FALSE}
-totalStepsPerDay<-aggregate(movements$steps, by=list(movements$Dates), FUN=sum, na.rm=TRUE)
+totalStepsPerDay<-aggregate(movements$steps, by=list(movements$date), FUN=sum, na.rm=TRUE)
 colnames(totalStepsPerDay) <- c('Date', 'TotalSteps')
 totalStepsMean<-mean(totalStepsPerDay$TotalSteps)
 totalStepsMedian<-median(totalStepsPerDay$TotalSteps)
@@ -45,11 +47,11 @@ hist(totalStepsPerDay$TotalSteps,main="Total Daily Steps",xlab="")
 ```{r averagesteps, result=FALSE}
 dailyActivity <- movements %>%
   na.omit() %>%
-  group_by(Dates, interval) %>%
+  group_by(date, interval) %>%
   dplyr::summarize(AvgSteps = mean(steps)) %>% 
   as.data.frame()
 
-pl<-ggplot(data=dailyActivity,aes(Dates,AvgSteps))
+pl<-ggplot(data=dailyActivity,aes(date,AvgSteps))
 pl+geom_line()
 q1<-dailyActivity[which.max(dailyActivity$AvgSteps),]
 ```
@@ -59,6 +61,20 @@ q1<-dailyActivity[which.max(dailyActivity$AvgSteps),]
 
 ## Imputing missing values
 
+```{r issingvalues, result=FALSE}
+missingSteps<-sum(is.na(movements$steps))
+missingDate<-sum(is.na(movements$date))
+missinginterval<-sum(is.na(movements$interval))
+```
+
+There are `r missingSteps` missing values for Steps,  `r missingDate` missing values for Date and `r missinginterval` missing values for interval  
+
+
+```{r imputemissingvalues, result=TRUE}
+summary(movements)
+movements$steps<-with(movements, impute(steps, mean))
+summary(movements)
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
