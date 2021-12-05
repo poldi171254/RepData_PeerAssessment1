@@ -8,7 +8,7 @@ output:
 ```{r loadlibraries}
 library(ggplot2)
 library(dplyr)
-library(Hmisc)
+library(simputation)
 ```
 
 ## Loading and preprocessing the data
@@ -38,9 +38,9 @@ totalStepsMedian<-median(totalStepsPerDay$TotalSteps)
 hist(totalStepsPerDay$TotalSteps,main="Total Daily Steps",xlab="")
 ```
 
-#### The media number of steps taken per day is `r totalStepsMedian`  
+The median number of steps taken per day is `r totalStepsMedian`  
 
-#### The mean number of steps taken per day is `r totalStepsMean`  
+The mean number of steps taken per day is `r totalStepsMean`  
 
 
 ## What is the average daily activity pattern?
@@ -56,12 +56,12 @@ pl+geom_line()
 q1<-dailyActivity[which.max(dailyActivity$AvgSteps),]
 ```
 
-### The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps is interval `r q1[2]` on `r q1[1]` with a value of `r q1[3]` steps  
+The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps is interval `r q1[2]` on `r q1[1]` with a value of `r q1[3]` steps  
 
 
 ## Imputing missing values
 
-```{r issingvalues, result=FALSE}
+```{r missingvalues, result=FALSE}
 missingSteps<-sum(is.na(movements$steps))
 missingDate<-sum(is.na(movements$date))
 missinginterval<-sum(is.na(movements$interval))
@@ -69,12 +69,29 @@ missinginterval<-sum(is.na(movements$interval))
 
 There are `r missingSteps` missing values for Steps,  `r missingDate` missing values for Date and `r missinginterval` missing values for interval  
 
+### Create a new dataset that is equal to the original dataset but with the missing data filled in
+
 
 ```{r imputemissingvalues, result=TRUE}
-summary(movements)
-movements$steps<-with(movements, impute(steps, mean))
-summary(movements)
+
+cleanMovements<-impute_lm(movements,steps ~ date)
+cleanStepsPerDay<-aggregate(cleanMovements$steps, by=list(cleanMovements$date),FUN=sum)
+colnames(cleanStepsPerDay) <- c('Date', 'DailySteps')
+hist(cleanStepsPerDay$DailySteps,main="Total Daily Steps",xlab="")
+cleanTotalStepsMean<-mean(cleanStepsPerDay$DailySteps)
+cleanTotalStepsMedian<-median(cleanStepsPerDay$DailySteps)
+diffMean<-abs(totalStepsMean - cleanTotalStepsMean)
+diffMedian<-abs(totalStepsMedian - cleanTotalStepsMedian)
 ```
+The median number of steps taken per day is `r cleanTotalStepsMedian`  
+
+The mean number of steps taken per day is `r cleanTotalStepsMean`  
+
+The difference in the mean between the two data set is `r diffMean`  
+
+The difference in the median between the two data set is `r diffMedian`  
+
+The median frequency of the steps has increaded from 25 to 35
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
