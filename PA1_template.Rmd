@@ -45,18 +45,24 @@ The mean number of steps taken per day is `r totalStepsMean`
 
 ## What is the average daily activity pattern?
 ```{r averagesteps, result=FALSE}
+intervalActivity <- movements %>%
+  na.omit() %>%
+  group_by(interval) %>%
+  dplyr::summarize(AvgSteps = mean(steps)) %>% 
+  as.data.frame()
+
+pl<-ggplot(data=intervalActivity,aes(interval,AvgSteps))
+pl+geom_line()
+
 dailyActivity <- movements %>%
   na.omit() %>%
   group_by(date, interval) %>%
   dplyr::summarize(AvgSteps = mean(steps)) %>% 
   as.data.frame()
-
-pl<-ggplot(data=dailyActivity,aes(date,AvgSteps))
-pl+geom_line()
-q1<-dailyActivity[which.max(dailyActivity$AvgSteps),]
+maxDaily<-dailyActivity[which.max(dailyActivity$AvgSteps),]
 ```
 
-The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps is interval `r q1[2]` on `r q1[1]` with a value of `r q1[3]` steps  
+The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps is interval `r maxDaily[2]` on `r maxDaily[1]` with a value of `r maxDaily[3]` steps  
 
 
 ## Imputing missing values
@@ -91,7 +97,33 @@ The difference in the mean between the two data set is `r diffMean`
 
 The difference in the median between the two data set is `r diffMedian`  
 
-The median frequency of the steps has increaded from 25 to 35
+The median frequency of the steps has increased from 25 to 35
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r weekdays, result=FALSE}
+cleanMovements$dayOfWeek<-factor(weekdays(cleanMovements$date))
+# Add a column that indicates if the day of the week falls on a weekend
+movementsByDayOfWeek <- cleanMovements %>%
+  mutate(Weekend = as.logical(case_when(
+    dayOfWeek == "Saturday" ~ "T",
+    dayOfWeek == "Sunday" ~ "T",
+    TRUE ~ "F")))
+
+# Get the dataset for weekdays
+weekdayMovements <- movementsByDayOfWeek %>%
+   filter(Weekend == F)
+
+# Get the dataset for the weekend movements
+weekendMovements <- movementsByDayOfWeek %>%
+   filter(Weekend == T)
+
+theme_set(
+  theme_bw() +
+    theme(legend.position = "top")
+  )
+#pl<-ggplot(data=movementsByDayOfWeek,aes(interval,AvgSteps))
+#pl+geom_line()
+```
+
