@@ -9,6 +9,7 @@ output:
 library(ggplot2)
 library(dplyr)
 library(simputation)
+library(ggpubr)
 ```
 
 ## Loading and preprocessing the data
@@ -119,11 +120,34 @@ weekdayMovements <- movementsByDayOfWeek %>%
 weekendMovements <- movementsByDayOfWeek %>%
    filter(Weekend == T)
 
-theme_set(
-  theme_bw() +
-    theme(legend.position = "top")
-  )
-#pl<-ggplot(data=movementsByDayOfWeek,aes(interval,AvgSteps))
-#pl+geom_line()
+# Calculate the average daily steps for each dataset
+weekdayActivity <- weekdayMovements %>%
+  group_by(interval) %>%
+  dplyr::summarize(AvgSteps = mean(steps)) %>% 
+  as.data.frame()
+weekendActivity <- weekendMovements %>%
+  group_by(interval) %>%
+  dplyr::summarize(AvgSteps = mean(steps)) %>% 
+  as.data.frame()
+
+# Create the plots for the datasets
+weekdayPlot<-ggplot()+geom_line(data=weekdayActivity,aes(interval,AvgSteps),color="red") + ylab("") + xlab("") + labs(title = "Week Days") + theme(plot.title = element_text(hjust = 0.5))
+weekendPlot<-ggplot()+geom_line(data=weekendActivity,aes(interval,AvgSteps),color="blue") + ylab("") + xlab("Interval") + labs(title = "Weekends") + theme(plot.title = element_text(hjust = 0.5)) 
+
+ggarrange(weekdayPlot,weekendPlot,ncol = 1)
+
+figure <- ggarrange(weekdayPlot,weekendPlot,ncol = 1)
+
+annotate_figure(figure,
+                top = text_grob("Visualizing mpg", color = "red", face = "bold", size = 14),
+                bottom = text_grob("Data source: \n mtcars data set", color = "blue",
+                                   hjust = 1, x = 1, face = "italic", size = 10),
+                left = text_grob("Figure arranged using ggpubr", color = "green", rot = 90),
+                right = "I'm done, thanks :-)!",
+                fig.lab = "Figure 1", fig.lab.face = "bold"
+                )
+
 ```
+
+There seems to be a signicant increase in the steps for the interval between 1000 and 2000 for the weekend
 
